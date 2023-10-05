@@ -1,25 +1,47 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const app = express();
 const books = require('./data.js')
 const port = 3000;
-
+const secretKey = '123Acb2@!'; //secret key
 
 app.use(express.json());
 
-// Create a new book
-app.post('/books', (req, res) => {
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const token = req.header('Authorization');
+  if (token === null) return res.sendStatus(401); // Unauthorized
+
+  jwt.verify(token, secretKey, (err, user) => {
+    if (err) return res.sendStatus(403); // Forbidden
+    req.user = user;
+    next();
+  });
+}
+
+// Create a new JWT token
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = { username };
+  const accessToken = jwt.sign(user, secretKey);
+  res.json({ accessToken });
+});
+
+// Protected CRUD operations
+app.post('/books', authenticateToken, (req, res) => {
+  // Create a new book (authenticated users only)
   const newBook = req.body;
   books.push(newBook);
   res.json(newBook);
 });
 
-// Read all books
-app.get('/books', (req, res) => {
+app.get('/books', authenticateToken, (req, res) => {
+  // Read all books (authenticated users only)
   res.json(books);
 });
 
-// Read a specific book by ID
-app.get('/books/:id', (req, res) => {
+app.get('/books/:id', authenticateToken, (req, res) => {
+  // Read a specific book by ID (authenticated users only)
   const bookId = parseInt(req.params.id);
   const book = books.find((b) => b.id === bookId);
   if (book) {
@@ -29,8 +51,8 @@ app.get('/books/:id', (req, res) => {
   }
 });
 
-// Update a book by ID
-app.put('/books/:id', (req, res) => {
+app.put('/books/:id', authenticateToken, (req, res) => {
+  // Update a book by ID (authenticated users only)
   const bookId = parseInt(req.params.id);
   const updatedBook = req.body;
   const index = books.findIndex((b) => b.id === bookId);
@@ -42,8 +64,8 @@ app.put('/books/:id', (req, res) => {
   }
 });
 
-// Delete a book by ID
-app.delete('/books/:id', (req, res) => {
+app.delete('/books/:id', authenticateToken, (req, res) => {
+  // Delete a book by ID (authenticated users only)
   const bookId = parseInt(req.params.id);
   const index = books.findIndex((b) => b.id === bookId);
   if (index !== -1) {
