@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = 3000;
 const secretKey = '123Acb2@!';
-const mongoUri = 'mongodb://localhost:27017/bookstore'; // Replace with your MongoDB URI
+const mongoUri = 'mongodb://localhost:27017/bookstore'; 
 
 // Connect to MongoDB
 mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
